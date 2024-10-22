@@ -10,7 +10,7 @@ require('./config/database');
 // Controllers
 const authController = require('./controllers/auth');
 const isSignedIn = require('./middleware/isSignedIn');
-
+const applicationsController = require('./controllers/applications.js');
 const app = express();
 // Set the port from environment variable or default to 3000
 const port = process.env.PORT ? process.env.PORT : '3000';
@@ -38,7 +38,11 @@ app.use(addUserToViews);
 
 // Public Routes
 app.get('/', async (req, res) => {
-  res.render('index.ejs');
+  if (req.session.user) {
+    res.redirect(`/users/${req.session.user._id}/applications`);  } else {
+    // Show the homepage for users who are not signed in
+    res.render('index.ejs');
+  }
 });
 
 app.use('/auth', authController);
@@ -46,14 +50,7 @@ app.use('/auth', authController);
 // Protected Routes
 app.use(isSignedIn);
 
-app.get('/protected', async (req, res) => {
-  if (req.session.user) {
-    res.send(`Welcome to the party ${req.session.user.username}.`);
-  } else {
-    res.sendStatus(404);
-    // res.send('Sorry, no guests allowed.');
-  }
-});
+app.use('/users/:userId/applications', applicationsController); //New
 
 app.listen(port, () => {
   // eslint-disable-next-line no-console
